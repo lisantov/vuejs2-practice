@@ -10,12 +10,25 @@ let app = new Vue({
             {
                 variantId: 2234,
                 variantColor: 'green',
+                variantImage: "./assets/vmSocks-green-onWhite.jpg",
             },
             {
                 variantId: 2235,
                 variantColor: 'blue',
+                variantImage: "./assets/vmSocks-blue-onWhite.jpg",
             },
         ],
-        sizes: ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'],
+        cart: 0
+    },
+    methods: {
+        addToCart() {
+          this.cart++;
+        },
+        removeFromCart() {
+            this.cart = Math.max(this.cart - 1, 0);
+        },
+        updateProduct(variantImage) {
+            this.image = variantImage;
+        }
     }
 })
