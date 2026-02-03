@@ -1,18 +1,3 @@
-Vue.component('product-details', {
-    props: {
-        details: {
-            type: Array,
-            required: true
-        }
-    },
-    template: `
-    <ul>
-        <li v-for="detail in details">{{ detail }}</li>
-    </ul>
-    `,
-
-});
-
 Vue.component('product', {
     props: {
         premium: {
@@ -29,7 +14,9 @@ Vue.component('product', {
             <h1>{{ title }}</h1>
             <p v-if="inStock">In stock</p>
             <p v-else>Out of Stock</p>
-            <product-details :details="details"></product-details>
+            <ul>
+                <li v-for="detail in details">{{ detail }}</li>
+            </ul>
             <div
                 class="color-box"
                 v-for="(variant, index) in variants"
@@ -37,15 +24,17 @@ Vue.component('product', {
                 :style="{ backgroundColor:variant.variantColor }"
                 @mouseover="updateProduct(index)"
             ></div>
-            <div class="cart">
-                <p>Cart({{ cart }})</p>
-            </div>
             <button
-                v-on:click="addToCart"
+                @click="addToCart"
                 :disabled="!inStock"
                 :class="{ disabledButton: !inStock }"
             >
                 Add to cart
+            </button>
+            <button
+                @click="removeFromCart"
+            >
+                Remove from cart
             </button>
             <p>Shipping: {{ shipping }}</p>
         </div>
@@ -72,12 +61,14 @@ Vue.component('product', {
                     variantQuantity: 10,
                 },
             ],
-            cart: 0
         }
     },
     methods: {
         addToCart() {
-            this.cart++;
+            this.$emit('add-to-cart', this.variants[this.selectedVariant].variantId);
+        },
+        removeFromCart() {
+            this.$emit('remove-from-cart', this.variants[this.selectedVariant].variantId);
         },
         updateProduct(index) {
             this.selectedVariant = index;
@@ -106,6 +97,15 @@ Vue.component('product', {
 let app = new Vue({
     el: '#app',
     data: {
-        premium: true
+        premium: true,
+        cart: []
+    },
+    methods: {
+        updateCart(id) {
+            this.cart.push(id)
+        },
+        removeCart(id) {
+            this.cart = this.cart.filter((v) => v !== id)
+        },
     }
 })

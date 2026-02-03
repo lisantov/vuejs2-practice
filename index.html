@@ -12,7 +12,12 @@
 </head>
 <body>
 <div id="app">
-    <product :premium="premium"></product>
+    <div class="cart">Cart({{ cart.length }})</div>
+    <product
+            :premium="premium"
+            @add-to-cart="updateCart"
+            @remove-from-cart="removeCart"
+    ></product>
 </div>
 </body>
 </html>
