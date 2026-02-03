@@ -24,9 +24,6 @@ let app = new Vue({
         addToCart() {
           this.cart++;
         },
-        removeFromCart() {
-            this.cart = Math.max(this.cart - 1, 0);
-        },
         updateProduct(variantImage) {
             this.image = variantImage;
         }
