@@ -5,31 +5,28 @@ Vue.component('product-review', {
     <form class="review-form" @submit.prevent="onSubmit">
      <p>
        <label for="name">Name:</label>
-       <input id="name" v-model="name" placeholder="name">
+       <input id="name" v-model="name" placeholder="name" :style="{ border: errors.name[0] ? '1px solid red' : '1px solid black' }">
+       <span v-show="errors.name[0]" style="color: red">{{ errors.name[0] }}</span>
      </p>
      <p>
        <label for="review">Review:</label>
-       <textarea id="review" v-model="review"></textarea>
+       <textarea id="review" v-model="review" :style="{ border: errors.review[0] ? '1px solid red' : '1px solid black' }"></textarea>
+       <span v-show="errors.review[0]" style="color: red">{{ errors.review[0] }}</span>
      </p>
      <p>
        <label for="rating">Rating:</label>
-       <select id="rating" v-model.number="rating">
+       <select id="rating" v-model.number="rating" :style="{ border: errors.rating[0] ? '1px solid red' : '1px solid black' }">
          <option>5</option>
          <option>4</option>
          <option>3</option>
          <option>2</option>
          <option>1</option>
        </select>
+       <span v-show="errors.rating[0]" style="color: red">{{ errors.rating[0] }}</span>
      </p>
      <p>
        <input type="submit" value="Submit">
      </p>
-     <p v-if="errors.length">
-         <b>Please correct the following error(s):</b>
-         <ul>
-           <li v-for="error in errors">{{ error }}</li>
-         </ul>
-    </p>
     </form>
     `,
     data() {
@@ -37,7 +34,11 @@ Vue.component('product-review', {
             name: null,
             review: null,
             rating: null,
-            errors: []
+            errors: {
+                name: [],
+                review: [],
+                rating: [],
+            }
         }
     },
     methods: {
@@ -49,13 +50,16 @@ Vue.component('product-review', {
                     rating: this.rating,
                 }
                 eventBus.$emit('review-submitted', productReview)
+                this.errors.name = [];
+                this.errors.review = [];
+                this.errors.rating = [];
                 this.name = null
                 this.review = null
                 this.rating = null
             } else {
-                if(!this.name) this.errors.push("Name required.")
-                if(!this.review) this.errors.push("Review required.")
-                if(!this.rating) this.errors.push("Rating required.")
+                if(!this.name) this.errors.name.push("Name required.")
+                if(!this.review) this.errors.review.push("Review required.")
+                if(!this.rating) this.errors.rating.push("Rating required.")
             }
         }
     }
