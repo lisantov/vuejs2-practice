@@ -153,6 +153,45 @@ Vue.component('product', {
     }
 });
 
+Vue.component('product-review-list', {
+    props: {
+      reviews: {
+          type: Array,
+          required: true
+      },
+    },
+    template: `
+        <div>
+            <select name="filter" v-model.number="currentFilter">
+                <option v-for="(option, index) in filterOptions" :key="index" :value="option">{{ option ? option : 'Не важно' }}</option>
+            </select>
+            <p v-if="!filteredReviews.length">There are no reviews yet.</p>
+            <ul>
+                <li v-for="review in filteredReviews">
+                    <p>{{ review.name }}</p>
+                    <p>Rating: {{ review.rating }}</p>
+                    <p>{{ review.review }}</p>
+                </li>
+            </ul>
+        </div>
+    `,
+    data() {
+        return {
+            currentFilter: null,
+            filterOptions: [null, 1, 2, 3, 4, 5]
+        }
+    },
+    computed: {
+        filteredReviews() {
+            if (this.currentFilter) {
+                return this.reviews.filter(r => r.rating === this.currentFilter);
+            }
+            return this.reviews
+        }
+    }
+
+})
+
 Vue.component('product-tabs', {
     props: {
         reviews: {
@@ -178,14 +217,7 @@ Vue.component('product-tabs', {
                 >{{ tab }}</span>
             </ul>
             <div v-show="selectedTab === 'Reviews'">
-                <p v-if="!reviews.length">There are no reviews yet.</p>
-                <ul>
-                    <li v-for="review in reviews">
-                        <p>{{ review.name }}</p>
-                        <p>Rating: {{ review.rating }}</p>
-                        <p>{{ review.review }}</p>
-                    </li>
-                </ul>
+                <product-review-list :reviews="reviews"></product-review-list>
             </div>
             <div v-show="selectedTab === 'Make a Review'">
                 <product-review></product-review>
