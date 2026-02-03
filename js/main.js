@@ -214,6 +214,11 @@ let app = new Vue({
         premium: true,
         cart: []
     },
+    mounted() {
+        eventBus.$on('add-to-cart', id => {
+            this.cart.push(id)
+        })
+    },
     methods: {
         updateCart(id) {
             this.cart.push(id)
