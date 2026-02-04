@@ -1,3 +1,5 @@
+const modalEventBus = new Vue();
+
 Vue.component('todo-table', {
     props: {
         todos: {
@@ -23,7 +25,7 @@ Vue.component('todo-table', {
                     </ul>
                 </li>
             </ul>
-            <button v-if="addable && !blocked" class="tableButton">Добавить задачу</button>
+            <button v-if="addable && !blocked" class="tableButton" @click="openModal">Добавить задачу</button>
         </div>
     `,
     methods: {
@@ -31,6 +33,9 @@ Vue.component('todo-table', {
             const total = todo.tasks.length;
             const checked = todo.tasks.filter(t => t.done).length;
             if ((checked / total) * 100 >= this.transitionQuota) this.$emit('task-transition', todo)
+        },
+        openModal() {
+            modalEventBus.$emit('open-modal');
         }
     }
 })
@@ -274,6 +279,60 @@ Vue.component('todo-list', {
     }
 })
 
+Vue.component('task-modal', {
+    template: `
+        <div class="modal">
+            <div class="overlay" @click="closeModal"></div>
+            <div class="modalContent">
+                <button class="modalClose" @click="closeModal"></button>
+                <form class="modalForm">
+                    <label class="modalInput">
+                        Имя задачи
+                        <input type="text" v-model="todoTitle" required placeholder="Имя вашей задачи">
+                    </label>
+                    <label v-for="(task, index) in todoTasks" :key="index" class="modalInput">
+                        Задание {{ index + 1 }}
+                        <input type="text" v-model="todoTasks[index]" required placeholder="Введите задание...">
+                    </label>
+                    <div style="display: flex; gap: 12px">
+                        <button type="button" @click="addTask">Добавить задание</button>
+                        <button type="button" @click="removeTask">Убрать задание</button>
+                    </div>
+                    <button type="submit">Добавить</button>
+                </form>
+            </div>
+        </div>
+    `,
+    data() {
+        return {
+            todoTitle: '',
+            todoTasks: ['', '', ''],
+        };
+    },
+    methods: {
+        addTask() {
+            if (this.todoTasks.length < 5) this.todoTasks.push('')
+        },
+        removeTask() {
+            if (this.todoTasks.length > 3) this.todoTasks.pop()
+        },
+        closeModal() {
+            modalEventBus.$emit('close-modal');
+        }
+    }
+})
+
 let app = new Vue({
     el: '#app',
+    data: {
+        isModalOpen: true,
+    },
+    mounted() {
+        modalEventBus.$on('close-modal', () => {
+            this.isModalOpen = false;
+        });
+        modalEventBus.$on('open-modal', () => {
+            this.isModalOpen = true;
+        });
+    }
 })

@@ -80,3 +80,69 @@
     justify-content: space-between;
     gap: 8px;
 }
+
+.modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.overlay {
+    position: fixed;
+    background: rgba(0, 0, 0, 0.3);
+    inset: 0;
+    z-index: -1;
+}
+
+.modalContent {
+    position: relative;
+    padding: 2vw;
+    padding-top: 3vw;
+    border-radius: 18px;
+    background-color: #e8e8e8;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.modalClose {
+    position: absolute;
+    width: 31px;
+    border-radius: 12px;
+    background-color: #ddd;
+    aspect-ratio: 1;
+    cursor: pointer;
+    right: 1vw;
+    top: 1vw;
+}
+
+.modalClose::after,
+.modalClose::before {
+    content: "";
+    left: 4px;
+    position: absolute;
+    width: 20px;
+    height: 2px;
+    background-color: #000;
+}
+
+.modalClose::after {
+    transform: rotate(45deg);
+}
+
+.modalClose::before {
+    transform: rotate(-45deg);
+}
+
+.modalForm {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.modalInput {
+    display: flex;
+    flex-direction: column;
+}
