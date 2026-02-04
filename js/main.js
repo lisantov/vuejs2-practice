@@ -33,6 +33,7 @@ Vue.component('todo-table', {
             const total = todo.tasks.length;
             const checked = todo.tasks.filter(t => t.done).length;
             if ((checked / total) * 100 >= this.transitionQuota) this.$emit('task-transition', todo)
+            else this.$emit('update-todos', this.todos);
         },
         openModal() {
             modalEventBus.$emit('open-modal');
@@ -49,12 +50,14 @@ Vue.component('todo-list', {
                 :addable="true" :max="tableData.firstTable.max"
                 :transitionQuota="tableData.firstTable.transitionQuota"
                 @task-transition="moveToSecond"
+                @update-todos="saveFirst"
             ></todo-table>
             <todo-table
                 :todos="tableData.secondTable.todos"
                 :max="tableData.secondTable.max"
                 :transitionQuota="tableData.secondTable.transitionQuota"
                 @task-transition="moveToThird"
+                @update-todos="saveSecond"
             ></todo-table>
             <todo-table :todos="tableData.thirdTable.todos"></todo-table>
         </main>
@@ -82,7 +85,7 @@ Vue.component('todo-list', {
                         },
                         {
                             id: 1,
-                            name: 'Первая задача',
+                            name: 'ddsa задача',
                             tasks: [
                                 {
                                     id: 0,
@@ -117,10 +120,12 @@ Vue.component('todo-list', {
             if (!this.blockData.secondTable) {
                 this.tableData.firstTable.todos = this.tableData.firstTable.todos.filter(t => t.id !== todo.id);
                 this.tableData.secondTable.todos.push(todo);
+                this.saveData();
             }
             else this.moveQueue.push(() => {
                 this.tableData.firstTable.todos = this.tableData.firstTable.todos.filter(t => t.id !== todo.id);
                 this.tableData.secondTable.todos.push(todo);
+                this.saveData();
             })
         },
         moveToThird(todo) {
@@ -130,7 +135,19 @@ Vue.component('todo-list', {
                 this.moveQueue[0]();
                 this.moveQueue = this.moveQueue.slice(1);
             }
+            this.saveData();
         },
+        saveFirst(todos) {
+            this.tableData.firstTable.todos = todos;
+            this.saveData();
+        },
+        saveSecond(todos) {
+            this.tableData.secondTable.todos = todos;
+            this.saveData();
+        },
+        saveData() {
+            localStorage.setItem('tableData', JSON.stringify(this.tableData));
+        }
     },
     computed: {
         blockData() {
@@ -141,14 +158,17 @@ Vue.component('todo-list', {
         }
     },
     mounted() {
+        const savedTasks = JSON.parse(localStorage.getItem('tableData'));
+        if (savedTasks) this.tableData = savedTasks;
         modalEventBus.$on('create-todo', (todo) => {
             const tasks = todo.tasks.map((t, i) => ({id: i, name: t, done: false}));
             const newTodo = {
-                id: this.tableData.firstTable.todos.length,
+                id: new Date().toISOString(),
                 name: todo.name,
                 tasks
             }
             this.tableData.firstTable.todos.push(newTodo);
+            this.saveData();
         })
     }
 })
@@ -200,7 +220,7 @@ Vue.component('task-modal', {
             });
             modalEventBus.$emit('close-modal');
         }
-    }
+    },
 })
 
 let app = new Vue({
