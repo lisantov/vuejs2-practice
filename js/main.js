@@ -325,7 +325,7 @@ Vue.component('task-modal', {
 let app = new Vue({
     el: '#app',
     data: {
-        isModalOpen: true,
+        isModalOpen: false,
     },
     mounted() {
         modalEventBus.$on('close-modal', () => {
