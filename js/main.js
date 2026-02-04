@@ -23,7 +23,7 @@ Vue.component('todo-table', {
                     </ul>
                 </li>
             </ul>
-            <button v-if="addable" class="tableButton">Добавить задачу</button>
+            <button v-if="addable && !blocked" class="tableButton">Добавить задачу</button>
         </div>
     `,
     methods: {
@@ -46,7 +46,6 @@ Vue.component('todo-list', {
                 @task-transition="moveToSecond"
             ></todo-table>
             <todo-table
-                :blocked="blockData.secondTable"
                 :todos="tableData.secondTable.todos"
                 :max="tableData.secondTable.max"
                 :transitionQuota="tableData.secondTable.transitionQuota"
@@ -78,6 +77,22 @@ Vue.component('todo-list', {
                         },
                         {
                             id: 1,
+                            name: 'Первая задача',
+                            tasks: [
+                                {
+                                    id: 0,
+                                    name: 'Погладить чайник',
+                                    done: false
+                                },
+                                {
+                                    id: 1,
+                                    name: 'Вскипятить кота',
+                                    done: false
+                                }
+                            ],
+                        },
+                        {
+                            id: 2,
                             name: 'Вторая задача',
                             tasks: [
                                 {
@@ -117,6 +132,102 @@ Vue.component('todo-list', {
                                 }
                             ],
                         },
+                        {
+                            id: 3,
+                            name: 'ТРЕТЬЯ задача',
+                            tasks: [
+                                {
+                                    id: 0,
+                                    name: 'Погладить чайник',
+                                    done: false
+                                },
+                                {
+                                    id: 1,
+                                    name: 'Вскипятить кота',
+                                    done: false
+                                }
+                            ],
+                        },
+                        {
+                            id: 4,
+                            name: 'ЧЕТВЁРТАЯ задача',
+                            tasks: [
+                                {
+                                    id: 0,
+                                    name: 'Погладить чайник',
+                                    done: false
+                                },
+                                {
+                                    id: 1,
+                                    name: 'Вскипятить кота',
+                                    done: false
+                                }
+                            ],
+                        },
+                        {
+                            id: 5,
+                            name: 'ПЯТАЯ задача',
+                            tasks: [
+                                {
+                                    id: 0,
+                                    name: 'Погладить чайник',
+                                    done: false
+                                },
+                                {
+                                    id: 1,
+                                    name: 'Вскипятить кота',
+                                    done: false
+                                }
+                            ],
+                        },
+                        {
+                            id: 6,
+                            name: 'ШЕСТАЯ задача',
+                            tasks: [
+                                {
+                                    id: 0,
+                                    name: 'Погладить чайник',
+                                    done: false
+                                },
+                                {
+                                    id: 1,
+                                    name: 'Вскипятить кота',
+                                    done: false
+                                }
+                            ],
+                        },
+                        {
+                            id: 7,
+                            name: 'СЕДЬМАЯ задача',
+                            tasks: [
+                                {
+                                    id: 0,
+                                    name: 'Погладить чайник',
+                                    done: false
+                                },
+                                {
+                                    id: 1,
+                                    name: 'Вскипятить кота',
+                                    done: false
+                                }
+                            ],
+                        },
+                        {
+                            id: 8,
+                            name: 'ВОСЬМАЯ задача',
+                            tasks: [
+                                {
+                                    id: 0,
+                                    name: 'Погладить чайник',
+                                    done: false
+                                },
+                                {
+                                    id: 1,
+                                    name: 'Вскипятить кота',
+                                    done: false
+                                }
+                            ],
+                        },
                     ],
                     max: 3,
                     transitionQuota: 50,
@@ -129,17 +240,28 @@ Vue.component('todo-list', {
                 thirdTable: {
                     todos: [],
                 },
-            }
+            },
+            moveQueue: []
         }
     },
     methods: {
         moveToSecond(todo) {
-            this.tableData.firstTable.todos = this.tableData.firstTable.todos.filter(t => t.id !== todo.id);
-            this.tableData.secondTable.todos.push(todo);
+            if (!this.blockData.secondTable) {
+                this.tableData.firstTable.todos = this.tableData.firstTable.todos.filter(t => t.id !== todo.id);
+                this.tableData.secondTable.todos.push(todo);
+            }
+            else this.moveQueue.push(() => {
+                this.tableData.firstTable.todos = this.tableData.firstTable.todos.filter(t => t.id !== todo.id);
+                this.tableData.secondTable.todos.push(todo);
+            })
         },
         moveToThird(todo) {
             this.tableData.secondTable.todos = this.tableData.secondTable.todos.filter(t => t.id !== todo.id);
             this.tableData.thirdTable.todos.push(todo);
+            if (this.moveQueue[0]) {
+                this.moveQueue[0]();
+                this.moveQueue = this.moveQueue.slice(1);
+            }
         },
     },
     computed: {
