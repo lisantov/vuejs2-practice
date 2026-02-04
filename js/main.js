@@ -19,8 +19,8 @@ Vue.component('todo-table', {
                     <h2 class="itemTitle">{{todo.name}}</h2>
                     <ul class="itemGrid">
                         <li v-for="task in todo.tasks" class="itemGridTask">
-                            <p>{{ task }}</p>
-                            <input type="checkbox">
+                            <p>{{ task.name }}</p>
+                            <input v-model="task.done" type="checkbox">
                         </li>
                     </ul>
                 </li>
@@ -28,9 +28,11 @@ Vue.component('todo-table', {
             <button v-if="addable" class="tableButton">Добавить задачу</button>
         </div>
     `,
-    computed: {
+    methods: {
+        checkQuota() {
 
-    },
+        }
+    }
 })
 
 Vue.component('todo-list', {
@@ -48,11 +50,33 @@ Vue.component('todo-list', {
                     todos: [
                         {
                             name: 'Первая задача',
-                            tasks: ['Погладить чайник', 'Вскипятить кота'],
+                            tasks: [
+                                {
+                                    name: 'Погладить чайник',
+                                    done: false
+                                },
+                                {
+                                    name: 'Вскипятить кота',
+                                    done: false
+                                }
+                            ],
                         },
                         {
                             name: 'Вторая задача',
-                            tasks: ['Почесать голову', 'Почистить зубы'],
+                            tasks: [
+                                {
+                                    name: 'Почесать голову',
+                                    done: true
+                                },
+                                {
+                                    name: 'Сделать лабу',
+                                    done: false
+                                },
+                                {
+                                    name: 'Ну и что-то ещё очень важное',
+                                    done: false
+                                }
+                            ],
                         },
                     ],
                     max: 3,
