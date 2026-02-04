@@ -1,5 +1,3 @@
-const eventBus = new Vue()
-
 Vue.component('todo-table', {
     props: {
         todos: {
@@ -15,12 +13,12 @@ Vue.component('todo-table', {
         <div class="table">
             <p v-if="!todos">Задач нету</p>
             <ul v-else class="tableGrid">
-                <li v-for="todo in todos" class="item">
+                <li v-for="todo in todos" class="item" :key="todo.id">
                     <h2 class="itemTitle">{{todo.name}}</h2>
                     <ul class="itemGrid">
-                        <li v-for="task in todo.tasks" class="itemGridTask">
+                        <li v-for="task in todo.tasks" class="itemGridTask" :key="task.id">
                             <p>{{ task.name }}</p>
-                            <input v-model="task.done" type="checkbox">
+                            <input v-model="task.done" type="checkbox" @change="checkQuota(todo)">
                         </li>
                     </ul>
                 </li>
@@ -29,8 +27,10 @@ Vue.component('todo-table', {
         </div>
     `,
     methods: {
-        checkQuota() {
-
+        checkQuota(todo) {
+            const total = todo.tasks.length;
+            const checked = todo.tasks.filter(t => t.done).length;
+            if ((checked / total) * 100 >= this.transitionQuota) this.$emit('task-transition', todo)
         }
     }
 })
@@ -38,8 +38,20 @@ Vue.component('todo-table', {
 Vue.component('todo-list', {
     template: `
         <main class="todo-grid">
-            <todo-table :blocked="blockData.firstTable" :todos="tableData.firstTable.todos" :addable="true" :max="tableData.firstTable.max" :transitionQuota="tableData.firstTable.transitionQuota"></todo-table>
-            <todo-table :blocked="blockData.secondTable" :todos="tableData.secondTable.todos" :max="tableData.secondTable.max" :transitionQuota="tableData.secondTable.transitionQuota"></todo-table>
+            <todo-table
+                :blocked="blockData.firstTable"
+                :todos="tableData.firstTable.todos"
+                :addable="true" :max="tableData.firstTable.max"
+                :transitionQuota="tableData.firstTable.transitionQuota"
+                @task-transition="moveToSecond"
+            ></todo-table>
+            <todo-table
+                :blocked="blockData.secondTable"
+                :todos="tableData.secondTable.todos"
+                :max="tableData.secondTable.max"
+                :transitionQuota="tableData.secondTable.transitionQuota"
+                @task-transition="moveToThird"
+            ></todo-table>
             <todo-table :todos="tableData.thirdTable.todos"></todo-table>
         </main>
     `,
@@ -49,30 +61,57 @@ Vue.component('todo-list', {
                 firstTable: {
                     todos: [
                         {
+                            id: 0,
                             name: 'Первая задача',
                             tasks: [
                                 {
+                                    id: 0,
                                     name: 'Погладить чайник',
                                     done: false
                                 },
                                 {
+                                    id: 1,
                                     name: 'Вскипятить кота',
                                     done: false
                                 }
                             ],
                         },
                         {
+                            id: 1,
                             name: 'Вторая задача',
                             tasks: [
                                 {
+                                    id: 0,
                                     name: 'Почесать голову',
                                     done: true
                                 },
                                 {
+                                    id: 1,
                                     name: 'Сделать лабу',
                                     done: false
                                 },
                                 {
+                                    id: 2,
+                                    name: 'Ну и что-то ещё очень важное',
+                                    done: false
+                                },
+                                {
+                                    id: 3,
+                                    name: 'Ну и что-то ещё очень важное',
+                                    done: false
+                                },
+                                {
+                                    id: 4,
+                                    name: 'Ну и что-то ещё очень важное',
+                                    done: false
+                                },
+                                {
+                                    id: 5,
+                                    name: 'Ну и что-то ещё очень важное',
+                                    done: false
+                                },
+                                {
+                                    id: 6,
                                     name: 'Ну и что-то ещё очень важное',
                                     done: false
                                 }
@@ -92,6 +131,16 @@ Vue.component('todo-list', {
                 },
             }
         }
+    },
+    methods: {
+        moveToSecond(todo) {
+            this.tableData.firstTable.todos = this.tableData.firstTable.todos.filter(t => t.id !== todo.id);
+            this.tableData.secondTable.todos.push(todo);
+        },
+        moveToThird(todo) {
+            this.tableData.secondTable.todos = this.tableData.secondTable.todos.filter(t => t.id !== todo.id);
+            this.tableData.thirdTable.todos.push(todo);
+        },
     },
     computed: {
         blockData() {
