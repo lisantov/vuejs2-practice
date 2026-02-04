@@ -64,6 +64,14 @@
     font-weight: 500;
 }
 
+.itemFinish {
+    width: max-content;
+    border-radius: 12px;
+    padding: 3px 10px;
+    background-color: rgba(135, 234, 112, 0.62);
+    font-size: 12px;
+}
+
 .itemGrid {
     padding-left: 12px;
     padding-top: 12px;

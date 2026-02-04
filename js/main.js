@@ -16,7 +16,10 @@ Vue.component('todo-table', {
             <p v-if="!todos">Задач нету</p>
             <ul v-else class="tableGrid">
                 <li v-for="todo in todos" class="item" :key="todo.id">
-                    <h2 class="itemTitle">{{todo.name}}</h2>
+                    <div style="display: grid; gap: 2px">
+                        <h2 class="itemTitle">{{todo.name}}</h2>
+                        <p v-if="todo.finished" class="itemFinish">{{ todo.finished }}</p>
+                    </div>
                     <ul class="itemGrid">
                         <li v-for="task in todo.tasks" class="itemGridTask" :key="task.id">
                             <p>{{ task.name }}</p>
@@ -59,7 +62,7 @@ Vue.component('todo-list', {
                 @task-transition="moveToThird"
                 @update-todos="saveSecond"
             ></todo-table>
-            <todo-table :todos="tableData.thirdTable.todos"></todo-table>
+            <todo-table :todos="tableData.thirdTable.todos" :blocked="true"></todo-table>
         </main>
     `,
     data() {
@@ -130,7 +133,10 @@ Vue.component('todo-list', {
         },
         moveToThird(todo) {
             this.tableData.secondTable.todos = this.tableData.secondTable.todos.filter(t => t.id !== todo.id);
-            this.tableData.thirdTable.todos.push(todo);
+            this.tableData.thirdTable.todos.push({
+                ...todo,
+                finished: new Date().toLocaleString()
+            });
             if (this.moveQueue[0]) {
                 this.moveQueue[0]();
                 this.moveQueue = this.moveQueue.slice(1);
