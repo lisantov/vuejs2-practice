@@ -20,7 +20,7 @@ Vue.component('todo-table', {
                     <ul class="itemGrid">
                         <li v-for="task in todo.tasks" class="itemGridTask" :key="task.id">
                             <p>{{ task.name }}</p>
-                            <input v-model="task.done" type="checkbox" @change="checkQuota(todo)">
+                            <input v-model="task.done" type="checkbox" @change="checkQuota(todo)" :disabled="blocked">
                         </li>
                     </ul>
                 </li>
@@ -45,7 +45,7 @@ Vue.component('todo-list', {
     template: `
         <main class="todo-grid">
             <todo-table
-                :blocked="blockData.firstTable"
+                :blocked="blockData.firstTable || blockData.secondTable"
                 :todos="tableData.firstTable.todos"
                 :addable="true" :max="tableData.firstTable.max"
                 :transitionQuota="tableData.firstTable.transitionQuota"
