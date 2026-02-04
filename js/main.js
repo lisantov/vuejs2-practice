@@ -9,6 +9,7 @@ Vue.component('todo-table', {
         max: Number,
         transitionQuota: Number,
         blocked: Boolean,
+        editable: Boolean,
         addable: Boolean,
     },
     template: `
@@ -28,7 +29,7 @@ Vue.component('todo-table', {
                     </ul>
                 </li>
             </ul>
-            <button v-if="addable && !blocked" class="tableButton" @click="openModal">Добавить задачу</button>
+            <button v-if="addable && !editable" class="tableButton" @click="openModal">Добавить задачу</button>
         </div>
     `,
     methods: {
@@ -48,7 +49,8 @@ Vue.component('todo-list', {
     template: `
         <main class="todo-grid">
             <todo-table
-                :blocked="blockData.firstTable || blockData.secondTable"
+                :blocked="blockData.secondTable"
+                :editable="blockData.firstTable"
                 :todos="tableData.firstTable.todos"
                 :addable="true" :max="tableData.firstTable.max"
                 :transitionQuota="tableData.firstTable.transitionQuota"
