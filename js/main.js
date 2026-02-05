@@ -2,183 +2,89 @@ const modalEventBus = new Vue();
 
 Vue.component('todo-table', {
     props: {
-        todos: {
+        tasks: {
             type: Array,
             required: true
         },
-        max: Number,
-        transitionQuota: Number,
+        name: String,
         blocked: Boolean,
         editable: Boolean,
         addable: Boolean,
     },
     template: `
         <div class="table">
-            <p v-if="!todos">Задач нету</p>
+            <p class="tableTitle">{{ name }}</p>
+            <p v-if="!tasks">Задач нету</p>
             <ul v-else class="tableGrid">
-                <li v-for="todo in todos" class="item" :key="todo.id">
+                <li v-for="task in tasks" class="item" :key="task.id">
                     <div style="display: grid; gap: 2px">
-                        <h2 class="itemTitle">{{todo.name}}</h2>
-                        <p v-if="todo.finished" class="itemFinish">{{ todo.finished }}</p>
+                        <h2 class="itemTitle">{{task.name}}</h2>
+                        <p v-if="task.finished" class="itemFinish">{{ task.finished }}</p>
                     </div>
-                    <ul class="itemGrid">
-                        <li v-for="task in todo.tasks" class="itemGridTask" :key="task.id">
-                            <p>{{ task.name }}</p>
-                            <input v-model="task.done" type="checkbox" @change="checkQuota(todo)" :disabled="blocked">
-                        </li>
-                    </ul>
                 </li>
             </ul>
-            <button v-if="addable && !editable" class="tableButton" @click="openModal">Добавить задачу</button>
         </div>
     `,
     methods: {
-        checkQuota(todo) {
-            const total = todo.tasks.length;
-            const checked = todo.tasks.filter(t => t.done).length;
-            if ((checked / total) * 100 >= this.transitionQuota) this.$emit('task-transition', todo)
-            else this.$emit('update-todos', this.todos);
-        },
-        openModal() {
-            modalEventBus.$emit('open-modal');
-        }
     }
 })
 
-Vue.component('todo-list', {
+Vue.component('canban-list', {
     template: `
-        <main class="todo-grid">
-            <todo-table
-                :blocked="blockData.secondTable"
-                :editable="blockData.firstTable"
-                :todos="tableData.firstTable.todos"
-                :addable="true" :max="tableData.firstTable.max"
-                :transitionQuota="tableData.firstTable.transitionQuota"
-                @task-transition="moveToSecond"
-                @update-todos="saveFirst"
-            ></todo-table>
-            <todo-table
-                :todos="tableData.secondTable.todos"
-                :max="tableData.secondTable.max"
-                :transitionQuota="tableData.secondTable.transitionQuota"
-                @task-transition="moveToThird"
-                @update-todos="saveSecond"
-            ></todo-table>
-            <todo-table :todos="tableData.thirdTable.todos" :blocked="true"></todo-table>
+        <main>
+            <div class="canbanGrid">
+                <todo-table
+                    :tasks="tableData.firstTable.tasks"
+                    :name="tableData.firstTable.name"
+                ></todo-table>
+                <todo-table
+                    :tasks="tableData.secondTable.tasks"
+                    :name="tableData.secondTable.name"
+                ></todo-table>
+                <todo-table
+                    :tasks="tableData.thirdTable.tasks"
+                    :name="tableData.thirdTable.name"
+                ></todo-table>
+                <todo-table
+                    :tasks="tableData.fourthTable.tasks"
+                    :name="tableData.fourthTable.name"
+                ></todo-table>
+                <button class="canbanButton" @click="openModal">Добавить задачу</button>
+            </div>
         </main>
     `,
     data() {
         return {
             tableData: {
                 firstTable: {
-                    todos: [
+                    name: 'Запланированные задачи',
+                    tasks: [
                         {
                             id: 0,
-                            name: 'Первая задача',
-                            tasks: [
-                                {
-                                    id: 0,
-                                    name: 'Погладить чайник',
-                                    done: false
-                                },
-                                {
-                                    id: 1,
-                                    name: 'Вскипятить кота',
-                                    done: false
-                                }
-                            ],
-                        },
-                        {
-                            id: 1,
-                            name: 'ddsa задача',
-                            tasks: [
-                                {
-                                    id: 0,
-                                    name: 'Погладить чайник',
-                                    done: false
-                                },
-                                {
-                                    id: 1,
-                                    name: 'Вскипятить кота',
-                                    done: false
-                                }
-                            ],
-                        },
+                            name: 'Первая задача'
+                        }
                     ],
-                    max: 3,
-                    transitionQuota: 50,
                 },
                 secondTable: {
-                    todos: [],
-                    max: 5,
-                    transitionQuota: 100,
+                    name: 'Задачи в работе',
+                    tasks: [],
                 },
                 thirdTable: {
-                    todos: [],
+                    name: 'Тестирование',
+                    tasks: [],
+                },
+                fourthTable: {
+                    name: 'Выполненные задачи',
+                    tasks: [],
                 },
             },
-            moveQueue: []
         }
     },
     methods: {
-        moveToSecond(todo) {
-            if (!this.blockData.secondTable) {
-                this.tableData.firstTable.todos = this.tableData.firstTable.todos.filter(t => t.id !== todo.id);
-                this.tableData.secondTable.todos.push(todo);
-                this.saveData();
-            }
-            else this.moveQueue.push(() => {
-                this.tableData.firstTable.todos = this.tableData.firstTable.todos.filter(t => t.id !== todo.id);
-                this.tableData.secondTable.todos.push(todo);
-                this.saveData();
-            })
+        openModal() {
+            modalEventBus.$emit('open-modal');
         },
-        moveToThird(todo) {
-            this.tableData.secondTable.todos = this.tableData.secondTable.todos.filter(t => t.id !== todo.id);
-            this.tableData.thirdTable.todos.push({
-                ...todo,
-                finished: new Date().toLocaleString()
-            });
-            if (this.moveQueue[0]) {
-                this.moveQueue[0]();
-                this.moveQueue = this.moveQueue.slice(1);
-            }
-            this.saveData();
-        },
-        saveFirst(todos) {
-            this.tableData.firstTable.todos = todos;
-            this.saveData();
-        },
-        saveSecond(todos) {
-            this.tableData.secondTable.todos = todos;
-            this.saveData();
-        },
-        saveData() {
-            localStorage.setItem('tableData', JSON.stringify(this.tableData));
-        }
     },
-    computed: {
-        blockData() {
-            return {
-                firstTable: this.tableData.firstTable.todos.length >= this.tableData.firstTable.max,
-                secondTable: this.tableData.secondTable.todos.length >= this.tableData.secondTable.max,
-            }
-        }
-    },
-    mounted() {
-        const savedTasks = JSON.parse(localStorage.getItem('tableData'));
-        if (savedTasks) this.tableData = savedTasks;
-        modalEventBus.$on('create-todo', (todo) => {
-            const tasks = todo.tasks.map((t, i) => ({id: i, name: t, done: false}));
-            const newTodo = {
-                id: new Date().toISOString(),
-                name: todo.name,
-                tasks
-            }
-            this.tableData.firstTable.todos.push(newTodo);
-            this.saveData();
-        })
-    }
 })
 
 Vue.component('task-modal', {

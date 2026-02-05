@@ -2,25 +2,24 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    font-family: 'Montserrat', sans-serif;
 }
 
 .title {
     text-align: center;
     font-size: 3rem;
-    font-family: 'Montserrat', sans-serif;
 }
 
-.todo-grid {
+.canbanGrid {
     padding: 6vw;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 1vw;
 }
 
 .table {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
     gap: 12px;
     position: relative;
     padding: 1vw;
@@ -29,6 +28,11 @@
     background-color: #e8e8e8;
     border-radius: 18px;
     border: 5px solid #d8d8d8;
+}
+
+.tableTitle {
+    font-size: 1.5rem;
+    text-align: center;
 }
 
 .tableGrid {
@@ -40,10 +44,11 @@
     list-style-type: none;
 }
 
-.tableButton {
+.canbanButton {
     flex-shrink: 0;
     width: 100%;
     padding: 4px 12px;
+    grid-column: 1/-1;
 }
 
 .item {
