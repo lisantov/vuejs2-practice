@@ -27,7 +27,7 @@ Vue.component('todo-table', {
                         <span class="itemDate">{{getDaysAgo(task.createdAt) > 0 ? getDaysAgo(task.createdAt) + ' д. назад' : 'сегодня'}}</span>
                     </div>
                     <div class="itemControls">
-                        <button>Редактировать</button>
+                        <button @click="updateTask(task)">Редактировать</button>
                         <button @click="deleteTask(task.id)">Удалить</button>
                     </div>
                 </li>
@@ -41,6 +41,10 @@ Vue.component('todo-table', {
         },
         deleteTask(id) {
             this.$emit('task-delete', id);
+        },
+        updateTask(task) {
+            modalEventBus.$emit('handle-update', task);
+            modalEventBus.$emit('open-modal');
         }
     }
 })
@@ -103,9 +107,13 @@ Vue.component('canban-list', {
     },
     methods: {
         openModal() {
+            modalEventBus.$emit('handle-create');
             modalEventBus.$emit('open-modal');
         },
         handleDelete(id) {
+            this.tableData.firstTable.tasks = this.tableData.firstTable.tasks.filter((task) => task.id !== id);
+        },
+        handleUpdate(task) {
             this.tableData.firstTable.tasks = this.tableData.firstTable.tasks.filter((task) => task.id !== id);
         }
     },
@@ -115,7 +123,13 @@ Vue.component('canban-list', {
                 ...task,
                 id: new Date().getTime() + Math.random() * 1000,
             });
-        })
+        });
+        modalEventBus.$on('update-task', (task) => {
+            this.tableData.firstTable.tasks = this.tableData.firstTable.tasks.map((t) => {
+                if (t.id === task.id) return task;
+                return t;
+            });
+        });
     }
 })
 
@@ -145,9 +159,12 @@ Vue.component('canban-modal', {
     `,
     data() {
         return {
+            taskId: '',
             taskTitle: '',
             taskDescription: '',
             taskDeadline: null,
+            taskCreatedAt: null,
+            isRedacting: false,
         };
     },
     methods: {
@@ -155,16 +172,47 @@ Vue.component('canban-modal', {
             modalEventBus.$emit('close-modal');
         },
         onSubmit() {
-            modalEventBus.$emit('create-task', {
-                name: this.taskTitle,
-                description: this.taskDescription,
-                deadline: new Date(this.taskDeadline),
-                createdAt: new Date(),
-                updatedAt: new Date(),
-            })
+            if (!this.isRedacting) {
+                modalEventBus.$emit('create-task', {
+                    name: this.taskTitle,
+                    description: this.taskDescription,
+                    deadline: new Date(this.taskDeadline),
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                })
+            }
+            else {
+                modalEventBus.$emit('update-task', {
+                    id: this.taskId,
+                    name: this.taskTitle,
+                    description: this.taskDescription,
+                    deadline: new Date(this.taskDeadline),
+                    createdAt: this.taskCreatedAt,
+                    updatedAt: new Date(),
+                })
+                this.isRedacting = false;
+            }
             modalEventBus.$emit('close-modal');
         }
     },
+    mounted() {
+        modalEventBus.$on('handle-update', (task) => {
+            this.taskId = task.id;
+            this.taskTitle = task.name;
+            this.taskDescription = task.description;
+            this.taskDeadline = `${task.deadline.getFullYear()}-${task.deadline.getMonth()}-${task.deadline.getDate()}`;
+            this.taskCreatedAt = task.createdAt;
+            this.isRedacting = true;
+        });
+        modalEventBus.$on('handle-create', () => {
+            this.taskId = null;
+            this.taskTitle = null;
+            this.taskDescription = null;
+            this.taskDeadline = null;
+            this.taskCreatedAt = null;
+            this.isRedacting = false;
+        });
+    }
 })
 
 let app = new Vue({
