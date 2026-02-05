@@ -125,6 +125,7 @@ Vue.component('canban-list', {
             });
         });
         modalEventBus.$on('update-task', (task) => {
+            task.deadline = new Date(`${task.deadline.getFullYear()}-${task.deadline.getMonth()+1}-${task.deadline.getDate()}`);
             this.tableData.firstTable.tasks = this.tableData.firstTable.tasks.map((t) => {
                 if (t.id === task.id) return task;
                 return t;
@@ -200,7 +201,7 @@ Vue.component('canban-modal', {
             this.taskId = task.id;
             this.taskTitle = task.name;
             this.taskDescription = task.description;
-            this.taskDeadline = `${task.deadline.getFullYear()}-${task.deadline.getMonth()}-${task.deadline.getDate()}`;
+            this.taskDeadline = `${task.deadline.getFullYear()}-${task.deadline.getMonth()+1}-${task.deadline.getDate()}`;
             this.taskCreatedAt = task.createdAt;
             this.isRedacting = true;
         });
