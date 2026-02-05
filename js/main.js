@@ -11,6 +11,7 @@ Vue.component('todo-table', {
         deletable: Boolean,
         canMovePrevious: Boolean,
         canMoveNext: Boolean,
+        deadlineFixer: Boolean,
     },
     template: `
         <div class="table">
@@ -25,10 +26,11 @@ Vue.component('todo-table', {
                             <div class="deadlineSeparator"></div>
                             <p class="itemDescription">{{ task.comment }}</p>
                         </div>
-                        <div class="deadline">
+                        <div v-if="!deadlineFixer" class="deadline">
                             <div class="deadlineSeparator"></div>
                             <p>Дедлайн через {{getDaysAgo(task.deadline) * -1}} д. </p>
                         </div>
+                        <p v-else :class="{ success: true, error: getDaysAgo(task.deadline) * -1 < 0 }">{{(getDaysAgo(task.deadline) * -1) < 0 ? 'Задание просрочено' : 'Задание выполнено в срок'}}</p>
                         <span class="itemDate">{{getDaysAgo(task.createdAt) > 0 ? getDaysAgo(task.createdAt) + ' д. назад' : 'сегодня'}}</span>
                     </div>
                     <div v-if="deletable || editable" class="itemControls">
@@ -71,12 +73,14 @@ Vue.component('canban-list', {
             <div class="canbanGrid">
                 <todo-table
                     v-for="(t, i) in tableData"
+                    :key="i"
                     :tasks="tasks[i]"
                     :name="t.name"
                     :editable="t.editable"
                     :deletable="t.deletable"
                     :canMovePrevious="t.previous"
                     :canMoveNext="t.next"
+                    :deadlineFixer="t.deadline"
                     @task-delete="handleDelete"
                     @task-move="handleMove"
                 ></todo-table>
@@ -93,6 +97,7 @@ Vue.component('canban-list', {
                     deletable: true,
                     previous: false,
                     next: true,
+                    deadline: false,
                 },
                 {
                     name: 'Задачи в работе',
@@ -100,6 +105,7 @@ Vue.component('canban-list', {
                     deletable: false,
                     previous: false,
                     next: true,
+                    deadline: false,
                 },
                 {
                     name: 'Тестирование',
@@ -107,6 +113,7 @@ Vue.component('canban-list', {
                     deletable: false,
                     previous: true,
                     next: true,
+                    deadline: false,
                 },
                 {
                     name: 'Выполненные задачи',
@@ -114,6 +121,7 @@ Vue.component('canban-list', {
                     deletable: false,
                     previous: false,
                     next: false,
+                    deadline: true,
                 },
             ],
             tasksData: [

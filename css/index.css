@@ -146,12 +146,12 @@
     font-weight: 300;
 }
 
-.itemFinish {
-    width: max-content;
-    border-radius: 12px;
-    padding: 3px 10px;
-    background-color: rgba(135, 234, 112, 0.62);
-    font-size: 12px;
+.success {
+    color: green;
+}
+
+.error {
+    color: red;
 }
 
 .itemGrid {
