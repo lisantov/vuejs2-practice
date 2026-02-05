@@ -21,6 +21,10 @@ Vue.component('todo-table', {
                     <div style="display: grid; gap: 4px">
                         <h2 class="itemTitle">{{task.name}}</h2>
                         <p class="itemDescription">{{task.description}}</p>
+                        <div v-if="task.comment" class="deadline">
+                            <div class="deadlineSeparator"></div>
+                            <p class="itemDescription">{{ task.comment }}</p>
+                        </div>
                         <div class="deadline">
                             <div class="deadlineSeparator"></div>
                             <p>Дедлайн через {{getDaysAgo(task.deadline) * -1}} д. </p>
@@ -29,7 +33,7 @@ Vue.component('todo-table', {
                     </div>
                     <div v-if="deletable || editable" class="itemControls">
                         <div v-if="canMovePrevious || canMoveNext" class="itemTableControls">
-                            <button v-if="canMovePrevious" class="itemReturn" @click="moveTask(task, -1)">Вернуть</button>
+                            <button v-if="canMovePrevious" class="itemReturn" @click="moveTaskWithComment(task, -1)">Вернуть</button>
                             <button v-if="canMoveNext" class="itemNext" @click="moveTask(task, 1)">Принять</button>
                         </div>
                         <button v-if="editable" @click="updateTask(task)">Редактировать</button>
@@ -53,6 +57,10 @@ Vue.component('todo-table', {
         },
         moveTask(task, step) {
             this.$emit('task-move', task, step);
+        },
+        moveTaskWithComment(task, step) {
+            modalEventBus.$emit('handle-comment', task.id, step);
+            modalEventBus.$emit('open-modal');
         }
     }
 })
@@ -117,6 +125,7 @@ Vue.component('canban-list', {
                     createdAt: new Date('2025-11-11'),
                     deadline: new Date('2027-11-11'),
                     updatedAt: new Date(),
+                    comment: null
                 }
             ]
         }
@@ -139,7 +148,7 @@ Vue.component('canban-list', {
         handleMove(task, step) {
             this.tasksData = this.tasksData.map((t) => {
                 if (t.id === task.id) return {
-                    ...t,
+                    ...task,
                     table: t.table + step
                 };
                 return t;
@@ -161,6 +170,10 @@ Vue.component('canban-list', {
                 return t;
             });
         });
+        modalEventBus.$on('add-comment', (comment, taskId, step) => {
+            const task = this.tasksData.find((t) => t.id === taskId);
+            this.handleMove({ ...task, comment }, step);
+        });
     }
 })
 
@@ -170,78 +183,101 @@ Vue.component('canban-modal', {
             <div class="overlay" @click="closeModal"></div>
             <div class="modalContent">
                 <button class="modalClose" @click="closeModal"></button>
-                <form class="modalForm" @submit.prevent="onSubmit">
+                <form v-if="variant === 'task'" class="modalForm" @submit.prevent="onTaskSubmit">
                     <label class="modalInput">
                         Имя задачи
-                        <input type="text" v-model="taskTitle" required placeholder="Имя вашей задачи">
+                        <input type="text" v-model="task.name" required placeholder="Имя вашей задачи">
                     </label>
                     <label class="modalInput">
                         Описание задачи
-                        <input type="text" v-model="taskDescription" required placeholder="Введите описание...">
+                        <input type="text" v-model="task.description" required placeholder="Введите описание...">
                     </label>
                     <label class="modalInput">
                         Дедлайн задачи
-                        <input type="date" v-model="taskDeadline" required placeholder="Выберите дедлайн задачи...">
+                        <input type="date" v-model="task.deadline" required placeholder="Выберите дедлайн задачи...">
                     </label>
-                    <button type="submit">Создать</button>
+                    <button type="submit">Сохранить</button>
+                </form>
+                <form v-if="variant === 'comment'" @submit.prevent="onCommentSubmit">
+                    <label class="modalInput">
+                        Комментарий
+                        <input type="text" v-model="comment" required placeholder="Напишите причину возврата...">
+                    </label>
+                    <button type="submit">Сохранить</button>
                 </form>
             </div>
         </div>
     `,
     data() {
         return {
-            taskId: '',
-            taskTitle: '',
-            taskDescription: '',
-            taskDeadline: null,
-            taskCreatedAt: null,
+            task: {
+                id: '',
+                name: '',
+                description: '',
+                deadline: null,
+                createdAt: null,
+                step: 0
+            },
             isRedacting: false,
+            variant: 'task',
+            comment: null,
         };
     },
     methods: {
         closeModal() {
             modalEventBus.$emit('close-modal');
         },
-        onSubmit() {
+        onTaskSubmit() {
             if (!this.isRedacting) {
                 modalEventBus.$emit('create-task', {
-                    name: this.taskTitle,
-                    description: this.taskDescription,
-                    deadline: new Date(this.taskDeadline),
+                    name: this.task.name,
+                    description: this.task.description,
+                    deadline: new Date(this.task.deadline),
                     createdAt: new Date(),
                     updatedAt: new Date(),
                 })
             }
             else {
                 modalEventBus.$emit('update-task', {
-                    id: this.taskId,
-                    name: this.taskTitle,
-                    description: this.taskDescription,
-                    deadline: new Date(this.taskDeadline),
-                    createdAt: this.taskCreatedAt,
+                    id: this.task.id,
+                    name: this.task.name,
+                    description: this.task.description,
+                    deadline: new Date(this.task.deadline),
+                    createdAt: this.task.createdAt,
                     updatedAt: new Date(),
                 })
                 this.isRedacting = false;
             }
             modalEventBus.$emit('close-modal');
-        }
+        },
+        onCommentSubmit() {
+            modalEventBus.$emit('add-comment', this.comment, this.task.id, this.task.step);
+            modalEventBus.$emit('close-modal');
+        },
     },
     mounted() {
         modalEventBus.$on('handle-update', (task) => {
-            this.taskId = task.id;
-            this.taskTitle = task.name;
-            this.taskDescription = task.description;
-            this.taskDeadline = `${task.deadline.getFullYear()}-${task.deadline.getMonth()+1}-${task.deadline.getDate()}`;
-            this.taskCreatedAt = task.createdAt;
+            this.variant = 'task';
+            this.task = {
+                ...task,
+                deadline: `${task.deadline.getFullYear()}-${task.deadline.getMonth()+1}-${task.deadline.getDate()}`,
+            };
             this.isRedacting = true;
         });
         modalEventBus.$on('handle-create', () => {
-            this.taskId = null;
-            this.taskTitle = null;
-            this.taskDescription = null;
-            this.taskDeadline = null;
-            this.taskCreatedAt = null;
+            this.variant = 'task';
+            this.task.id = null;
+            this.task.name = null;
+            this.task.description = null;
+            this.task.deadline = null;
+            this.task.createdAt = null;
             this.isRedacting = false;
+        });
+        modalEventBus.$on('handle-comment', (taskId, step) => {
+            this.variant = 'comment';
+            this.task.id = taskId;
+            this.task.step = step;
+            this.comment = null;
         });
     }
 })

@@ -120,6 +120,7 @@
 
 .itemDescription {
     width: 100%;
+    word-break: break-word;
     font-family: 'Montserrat', sans-serif;
     font-size: 0.9rem;
     font-weight: 300;
