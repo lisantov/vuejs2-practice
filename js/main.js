@@ -17,15 +17,31 @@ Vue.component('todo-table', {
             <p v-if="!tasks">Задач нету</p>
             <ul v-else class="tableGrid">
                 <li v-for="task in tasks" class="item" :key="task.id">
-                    <div style="display: grid; gap: 2px">
+                    <div style="display: grid; gap: 4px">
                         <h2 class="itemTitle">{{task.name}}</h2>
-                        <p v-if="task.finished" class="itemFinish">{{ task.finished }}</p>
+                        <p class="itemDescription">{{task.description}}</p>
+                        <div class="deadline">
+                            <div class="deadlineSeparator"></div>
+                            <p>Дедлайн через {{getDaysAgo(task.deadline) * -1}} д. </p>
+                        </div>
+                        <span class="itemDate">{{getDaysAgo(task.createdAt) > 0 ? getDaysAgo(task.createdAt) + ' д. назад' : 'сегодня'}}</span>
+                    </div>
+                    <div class="itemControls">
+                        <button>Редактировать</button>
+                        <button @click="deleteTask(task.id)">Удалить</button>
                     </div>
                 </li>
             </ul>
         </div>
     `,
     methods: {
+        getDaysAgo(date) {
+            const diff = new Date().getTime() - date.getTime();
+            return Math.floor(diff / (1000 * 60 * 60 * 24));
+        },
+        deleteTask(id) {
+            this.$emit('task-delete', id);
+        }
     }
 })
 
@@ -36,6 +52,7 @@ Vue.component('canban-list', {
                 <todo-table
                     :tasks="tableData.firstTable.tasks"
                     :name="tableData.firstTable.name"
+                    @task-delete="handleDelete"
                 ></todo-table>
                 <todo-table
                     :tasks="tableData.secondTable.tasks"
@@ -61,7 +78,11 @@ Vue.component('canban-list', {
                     tasks: [
                         {
                             id: 0,
-                            name: 'Первая задача'
+                            name: 'Первая задача',
+                            description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi nec sapien consectetur, egestas massa tincidunt, vehicula risus. Integer suscipit ante sit amet luctus rutrum. Cras.',
+                            createdAt: new Date('2025-11-11'),
+                            deadline: new Date('2027-11-11'),
+                            updatedAt: new Date(),
                         }
                     ],
                 },
@@ -84,10 +105,21 @@ Vue.component('canban-list', {
         openModal() {
             modalEventBus.$emit('open-modal');
         },
+        handleDelete(id) {
+            this.tableData.firstTable.tasks = this.tableData.firstTable.tasks.filter((task) => task.id !== id);
+        }
     },
+    mounted() {
+        modalEventBus.$on('create-task', (task) => {
+            this.tableData.firstTable.tasks.push({
+                ...task,
+                id: new Date().getTime() + Math.random() * 1000,
+            });
+        })
+    }
 })
 
-Vue.component('task-modal', {
+Vue.component('canban-modal', {
     template: `
         <div class="modal">
             <div class="overlay" @click="closeModal"></div>
@@ -96,42 +128,40 @@ Vue.component('task-modal', {
                 <form class="modalForm" @submit.prevent="onSubmit">
                     <label class="modalInput">
                         Имя задачи
-                        <input type="text" v-model="todoTitle" required placeholder="Имя вашей задачи">
+                        <input type="text" v-model="taskTitle" required placeholder="Имя вашей задачи">
                     </label>
-                    <label v-for="(task, index) in todoTasks" :key="index" class="modalInput">
-                        Задание {{ index + 1 }}
-                        <input type="text" v-model="todoTasks[index]" required placeholder="Введите задание...">
+                    <label class="modalInput">
+                        Описание задачи
+                        <input type="text" v-model="taskDescription" required placeholder="Введите описание...">
                     </label>
-                    <div style="display: flex; gap: 12px">
-                        <button type="button" @click="addTask">Добавить задание</button>
-                        <button type="button" @click="removeTask">Убрать задание</button>
-                    </div>
-                    <button type="submit">Добавить</button>
+                    <label class="modalInput">
+                        Дедлайн задачи
+                        <input type="date" v-model="taskDeadline" required placeholder="Выберите дедлайн задачи...">
+                    </label>
+                    <button type="submit">Создать</button>
                 </form>
             </div>
         </div>
     `,
     data() {
         return {
-            todoTitle: '',
-            todoTasks: ['', '', ''],
+            taskTitle: '',
+            taskDescription: '',
+            taskDeadline: null,
         };
     },
     methods: {
-        addTask() {
-            if (this.todoTasks.length < 5) this.todoTasks.push('')
-        },
-        removeTask() {
-            if (this.todoTasks.length > 3) this.todoTasks.pop()
-        },
         closeModal() {
             modalEventBus.$emit('close-modal');
         },
         onSubmit() {
-            modalEventBus.$emit('create-todo', {
-                name: this.todoTitle,
-                tasks: this.todoTasks,
-            });
+            modalEventBus.$emit('create-task', {
+                name: this.taskTitle,
+                description: this.taskDescription,
+                deadline: new Date(this.taskDeadline),
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            })
             modalEventBus.$emit('close-modal');
         }
     },

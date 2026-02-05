@@ -12,8 +12,10 @@
 </head>
 <body>
 <div id="app">
-    <h1 class="title">Канбан доска</h1>
+    <div class="cover"></div>
+    <h1 class="title">Кабан доска</h1>
     <canban-list></canban-list>
+    <canban-modal v-if="isModalOpen"></canban-modal>
 </div>
 </body>
 </html>

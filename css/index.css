@@ -5,6 +5,17 @@
     font-family: 'Montserrat', sans-serif;
 }
 
+.cover {
+    position: fixed;
+    inset: 0;
+    background-image: url('../assets/kaban.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0.4;
+    z-index: -1;
+}
+
 .title {
     text-align: center;
     font-size: 3rem;
@@ -52,11 +63,31 @@
 }
 
 .item {
-    padding: 0.6vw 1vw 0.8vw;
+    position: relative;
+    padding: 0.6vw 1vw 1vw;
     flex-shrink: 0;
     width: 100%;
     background-color: #f8f8f8;
     border-radius: max(calc(18px - 1vw), 4px);
+    overflow: hidden;
+}
+
+.item:hover .itemControls {
+    visibility: visible;
+    opacity: 1;
+}
+
+.itemControls {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    visibility: hidden;
+    background-color: #ffffff4d;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    transition: 0.2s ease-in-out;
 }
 
 .itemTitle {
@@ -67,6 +98,33 @@
     font-family: 'Montserrat', sans-serif;
     font-size: 1.25rem;
     font-weight: 500;
+}
+
+.itemDescription {
+    width: 100%;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 300;
+}
+
+.deadlineSeparator {
+    margin: 8px 0;
+    width: 100%;
+    height: 1px;
+    border: 1px dashed #ca6c6c;
+}
+
+.deadline {
+    color: #e65d5d;
+}
+
+.itemDate {
+    position: absolute;
+    bottom: 0.2vw;
+    right: 0.5vw;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 300;
 }
 
 .itemFinish {
