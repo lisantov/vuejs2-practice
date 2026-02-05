@@ -64,7 +64,7 @@
 
 .item {
     position: relative;
-    padding: 0.6vw 1vw 1vw;
+    padding: 0.6vw 1vw 1.8vw;
     flex-shrink: 0;
     width: 100%;
     background-color: #f8f8f8;
@@ -82,12 +82,30 @@
     inset: 0;
     opacity: 0;
     visibility: hidden;
-    background-color: #ffffff4d;
+    background-color: #0000004d;
     padding: 12px;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
     transition: 0.2s ease-in-out;
+}
+
+.itemTableControls {
+    position: absolute;
+    height: min-content;
+    inset: 0;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.itemReturn {
+    grid-column: 1/2;
+}
+
+.itemNext{
+    grid-column: -1/-2;
 }
 
 .itemTitle {

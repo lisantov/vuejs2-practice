@@ -9,6 +9,8 @@ Vue.component('todo-table', {
         name: String,
         editable: Boolean,
         deletable: Boolean,
+        canMovePrevious: Boolean,
+        canMoveNext: Boolean,
     },
     template: `
         <div class="table">
@@ -26,6 +28,10 @@ Vue.component('todo-table', {
                         <span class="itemDate">{{getDaysAgo(task.createdAt) > 0 ? getDaysAgo(task.createdAt) + ' д. назад' : 'сегодня'}}</span>
                     </div>
                     <div v-if="deletable || editable" class="itemControls">
+                        <div v-if="canMovePrevious || canMoveNext" class="itemTableControls">
+                            <button v-if="canMovePrevious" class="itemReturn" @click="moveTask(task, -1)">Вернуть</button>
+                            <button v-if="canMoveNext" class="itemNext" @click="moveTask(task, 1)">Принять</button>
+                        </div>
                         <button v-if="editable" @click="updateTask(task)">Редактировать</button>
                         <button v-if="deletable" @click="deleteTask(task.id)">Удалить</button>
                     </div>
@@ -44,6 +50,9 @@ Vue.component('todo-table', {
         updateTask(task) {
             modalEventBus.$emit('handle-update', task);
             modalEventBus.$emit('open-modal');
+        },
+        moveTask(task, step) {
+            this.$emit('task-move', task, step);
         }
     }
 })
@@ -58,7 +67,10 @@ Vue.component('canban-list', {
                     :name="t.name"
                     :editable="t.editable"
                     :deletable="t.deletable"
+                    :canMovePrevious="t.previous"
+                    :canMoveNext="t.next"
                     @task-delete="handleDelete"
+                    @task-move="handleMove"
                 ></todo-table>
                 <button class="canbanButton" @click="openModal">Добавить задачу</button>
             </div>
@@ -71,21 +83,29 @@ Vue.component('canban-list', {
                     name: 'Запланированные задачи',
                     editable: true,
                     deletable: true,
+                    previous: false,
+                    next: true,
                 },
                 {
                     name: 'Задачи в работе',
                     editable: true,
                     deletable: false,
+                    previous: false,
+                    next: true,
                 },
                 {
                     name: 'Тестирование',
                     editable: true,
                     deletable: false,
+                    previous: true,
+                    next: true,
                 },
                 {
                     name: 'Выполненные задачи',
                     editable: false,
                     deletable: false,
+                    previous: false,
+                    next: false,
                 },
             ],
             tasksData: [
@@ -116,12 +136,15 @@ Vue.component('canban-list', {
         handleDelete(id) {
             this.tasksData = this.tasksData.filter((task) => task.id !== id);
         },
-        handleUpdate(task) {
-            this.tasksData = this.tasksData.map((task) => {
-                if (task.id === id) return Object.assign(t, task);
+        handleMove(task, step) {
+            this.tasksData = this.tasksData.map((t) => {
+                if (t.id === task.id) return {
+                    ...t,
+                    table: t.table + step
+                };
                 return t;
             });
-        }
+        },
     },
     mounted() {
         modalEventBus.$on('create-task', (task) => {
