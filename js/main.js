@@ -7,9 +7,8 @@ Vue.component('todo-table', {
             required: true
         },
         name: String,
-        blocked: Boolean,
         editable: Boolean,
-        addable: Boolean,
+        deletable: Boolean,
     },
     template: `
         <div class="table">
@@ -26,9 +25,9 @@ Vue.component('todo-table', {
                         </div>
                         <span class="itemDate">{{getDaysAgo(task.createdAt) > 0 ? getDaysAgo(task.createdAt) + ' д. назад' : 'сегодня'}}</span>
                     </div>
-                    <div class="itemControls">
-                        <button @click="updateTask(task)">Редактировать</button>
-                        <button @click="deleteTask(task.id)">Удалить</button>
+                    <div v-if="deletable || editable" class="itemControls">
+                        <button v-if="editable" @click="updateTask(task)">Редактировать</button>
+                        <button v-if="deletable" @click="deleteTask(task.id)">Удалить</button>
                     </div>
                 </li>
             </ul>
@@ -54,21 +53,12 @@ Vue.component('canban-list', {
         <main>
             <div class="canbanGrid">
                 <todo-table
-                    :tasks="tableData.firstTable.tasks"
-                    :name="tableData.firstTable.name"
+                    v-for="(t, i) in tableData"
+                    :tasks="tasks[i]"
+                    :name="t.name"
+                    :editable="t.editable"
+                    :deletable="t.deletable"
                     @task-delete="handleDelete"
-                ></todo-table>
-                <todo-table
-                    :tasks="tableData.secondTable.tasks"
-                    :name="tableData.secondTable.name"
-                ></todo-table>
-                <todo-table
-                    :tasks="tableData.thirdTable.tasks"
-                    :name="tableData.thirdTable.name"
-                ></todo-table>
-                <todo-table
-                    :tasks="tableData.fourthTable.tasks"
-                    :name="tableData.fourthTable.name"
                 ></todo-table>
                 <button class="canbanButton" @click="openModal">Добавить задачу</button>
             </div>
@@ -76,34 +66,47 @@ Vue.component('canban-list', {
     `,
     data() {
         return {
-            tableData: {
-                firstTable: {
+            tableData: [
+                {
                     name: 'Запланированные задачи',
-                    tasks: [
-                        {
-                            id: 0,
-                            name: 'Первая задача',
-                            description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi nec sapien consectetur, egestas massa tincidunt, vehicula risus. Integer suscipit ante sit amet luctus rutrum. Cras.',
-                            createdAt: new Date('2025-11-11'),
-                            deadline: new Date('2027-11-11'),
-                            updatedAt: new Date(),
-                        }
-                    ],
+                    editable: true,
+                    deletable: true,
                 },
-                secondTable: {
+                {
                     name: 'Задачи в работе',
-                    tasks: [],
+                    editable: true,
+                    deletable: false,
                 },
-                thirdTable: {
+                {
                     name: 'Тестирование',
-                    tasks: [],
+                    editable: true,
+                    deletable: false,
                 },
-                fourthTable: {
+                {
                     name: 'Выполненные задачи',
-                    tasks: [],
+                    editable: false,
+                    deletable: false,
                 },
-            },
+            ],
+            tasksData: [
+                {
+                    id: 0,
+                    table: 0,
+                    name: 'Первая задача',
+                    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi nec sapien consectetur, egestas massa tincidunt, vehicula risus. Integer suscipit ante sit amet luctus rutrum. Cras.',
+                    createdAt: new Date('2025-11-11'),
+                    deadline: new Date('2027-11-11'),
+                    updatedAt: new Date(),
+                }
+            ]
         }
+    },
+    computed: {
+        tasks() {
+            return [
+                ...this.tableData.map((t, i) => this.tasksData.filter((task) => task.table === i))
+            ];
+        },
     },
     methods: {
         openModal() {
@@ -111,23 +114,27 @@ Vue.component('canban-list', {
             modalEventBus.$emit('open-modal');
         },
         handleDelete(id) {
-            this.tableData.firstTable.tasks = this.tableData.firstTable.tasks.filter((task) => task.id !== id);
+            this.tasksData = this.tasksData.filter((task) => task.id !== id);
         },
         handleUpdate(task) {
-            this.tableData.firstTable.tasks = this.tableData.firstTable.tasks.filter((task) => task.id !== id);
+            this.tasksData = this.tasksData.map((task) => {
+                if (task.id === id) return Object.assign(t, task);
+                return t;
+            });
         }
     },
     mounted() {
         modalEventBus.$on('create-task', (task) => {
-            this.tableData.firstTable.tasks.push({
+            this.tasksData.push({
                 ...task,
                 id: new Date().getTime() + Math.random() * 1000,
+                table: 0,
             });
         });
         modalEventBus.$on('update-task', (task) => {
             task.deadline = new Date(`${task.deadline.getFullYear()}-${task.deadline.getMonth()+1}-${task.deadline.getDate()}`);
-            this.tableData.firstTable.tasks = this.tableData.firstTable.tasks.map((t) => {
-                if (t.id === task.id) return task;
+            this.tasksData = this.tasksData.map((t) => {
+                if (t.id === task.id) return Object.assign(t, task);
                 return t;
             });
         });
