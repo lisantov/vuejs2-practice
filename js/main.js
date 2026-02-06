@@ -37,12 +37,12 @@ Vue.component('todo-table', {
                                     </label>
                                 </li>
                             </ul>
-                            <button v-if="task.subtasks.length && todo.table === 0">Добавить подзадачу</button>
+                            <button v-if="todo.table === 0" @click="addSubtask(todo.id, task.id)">Добавить подзадачу</button>
                         </li>
                     </ul>
                 </li>
             </ul>
-            <button v-if="addable && !editable" class="tableButton" @click="openModal">Добавить задачу</button>
+            <button v-if="addable && !editable" class="tableButton" @click="addTodo">Добавить задачу</button>
         </div>
     `,
     methods: {
@@ -70,6 +70,14 @@ Vue.component('todo-table', {
                 if (subtasks) sum += subtasks.length;
             })
             return sum;
+        },
+        addSubtask(todoId, taskId) {
+            modalEventBus.$emit('subtask-form', todoId, taskId);
+            this.openModal()
+        },
+        addTodo() {
+            modalEventBus.$emit('todo-form');
+            this.openModal()
         },
         openModal() {
             modalEventBus.$emit('open-modal');
@@ -106,7 +114,7 @@ Vue.component('todo-list', {
                 firstTable: {
                     todos: [
                         {
-                            id: 0,
+                            id: new Date().toISOString() + Math.random() * 1000,
                             name: 'Первая задача',
                             table: 0,
                             tasks: [
@@ -127,8 +135,8 @@ Vue.component('todo-list', {
                             ],
                         },
                         {
-                            id: 1,
-                            name: 'ddsa задача',
+                            id: new Date().toISOString() + Math.random() * 1000,
+                            name: 'Вторая задача',
                             table: 0,
                             tasks: [
                                 {
@@ -141,19 +149,16 @@ Vue.component('todo-list', {
                                             id: 0,
                                             name: 'Взять чайник',
                                             done: false,
-                                            blocked: false,
                                         },
                                         {
                                             id: 1,
                                             name: 'Погладить чайник',
                                             done: false,
-                                            blocked: false,
                                         },
                                         {
                                             id: 2,
                                             name: 'Поставить чайник',
                                             done: false,
-                                            blocked: false,
                                         },
                                     ]
                                 },
@@ -304,13 +309,32 @@ Vue.component('todo-list', {
         const savedTasks = JSON.parse(localStorage.getItem('tableData'));
         if (savedTasks) this.tableData = savedTasks;
         modalEventBus.$on('create-todo', (todo) => {
-            const tasks = todo.tasks.map((t, i) => ({id: i, name: t, done: false, blocked: false, table: 0}));
+            const tasks = todo.tasks.map((t, i) => ({id: i, name: t, done: false, blocked: false, subtasks: []}));
             const newTodo = {
-                id: new Date().toISOString(),
+                id: new Date().toISOString() + Math.random() * 1000,
                 name: todo.name,
+                table: 0,
                 tasks,
             }
             this.tableData.firstTable.todos.push(newTodo);
+            this.saveData();
+        })
+        modalEventBus.$on('add-subtask', (id, taskId, subtask) => {
+            const newSubtask = {
+                id: new Date().toISOString() + Math.random() * 1000,
+                name: subtask,
+                done: false,
+            }
+            this.tableData.firstTable.todos = this.tableData.firstTable.todos.map(t => {
+                if (t.id === id) return {
+                    ...t,
+                    tasks: t.tasks.map(tsk => {
+                        if (tsk.id === taskId) return {...tsk, subtasks: [...tsk.subtasks, newSubtask]};
+                        return tsk
+                    })
+                }
+                return t;
+            })
             this.saveData();
         })
     }
@@ -322,7 +346,7 @@ Vue.component('task-modal', {
             <div class="overlay" @click="closeModal"></div>
             <div class="modalContent">
                 <button class="modalClose" @click="closeModal"></button>
-                <form class="modalForm" @submit.prevent="onSubmit">
+                <form v-if="variant === 'todo'" class="modalForm" @submit.prevent="onTodoSubmit">
                     <label class="modalInput">
                         Имя задачи
                         <input type="text" v-model="todoTitle" required placeholder="Имя вашей задачи">
@@ -337,11 +361,22 @@ Vue.component('task-modal', {
                     </div>
                     <button type="submit">Добавить</button>
                 </form>
+                <form v-else-if="variant === 'subtask'" class="modalForm" @submit.prevent="onSubtaskSubmit">
+                    <label class="modalInput">
+                        Имя подзадачи
+                        <input type="text" v-model="todoSubtask" required placeholder="Имя вашей задачи">
+                    </label>
+                    <button type="submit">Добавить</button>
+                </form>
             </div>
         </div>
     `,
     data() {
         return {
+            variant: 'todo',
+            todoId: null,
+            taskId: null,
+            todoSubtask: '',
             todoTitle: '',
             todoTasks: ['', '', ''],
         };
@@ -356,14 +391,31 @@ Vue.component('task-modal', {
         closeModal() {
             modalEventBus.$emit('close-modal');
         },
-        onSubmit() {
+        onTodoSubmit() {
             modalEventBus.$emit('create-todo', {
                 name: this.todoTitle,
                 tasks: this.todoTasks,
             });
             modalEventBus.$emit('close-modal');
-        }
+        },
+        onSubtaskSubmit() {
+            modalEventBus.$emit('add-subtask', this.todoId, this.taskId, this.todoSubtask);
+            modalEventBus.$emit('close-modal');
+        },
     },
+    mounted() {
+        modalEventBus.$on('todo-form', () => {
+            this.variant = 'todo';
+            this.todoTitle = '';
+            this.todoTasks = ['', '', ''];
+        });
+        modalEventBus.$on('subtask-form', (id, taskId) => {
+            this.variant = 'subtask';
+            this.todoId = id;
+            this.taskId = taskId;
+            this.todoSubtask = '';
+        });
+    }
 })
 
 let app = new Vue({
