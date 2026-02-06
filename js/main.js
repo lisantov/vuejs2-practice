@@ -24,8 +24,20 @@ Vue.component('todo-table', {
                     </div>
                     <ul class="itemGrid">
                         <li v-for="task in todo.tasks" class="itemGridTask" :key="task.id">
-                            <p>{{ task.name }}</p>
-                            <input v-model="task.done" type="checkbox" @change="checkQuota(todo)" :disabled="task.blocked || blocked">
+                            <label style="display: flex; justify-content: space-between; width: 100%">
+                                <p>{{ task.name }}</p>
+                                <input v-model="task.done" type="checkbox"  v-if="task.subtasks.every(s => s.done) && task.subtasks.length" :disabled="true">
+                                <input v-model="task.done" type="checkbox" v-else-if="!task.subtasks.length" :disabled="task.blocked || blocked" @change="checkQuota(todo)">
+                            </label>
+                            <ul v-if="task.subtasks.length" class="itemSubGrid">
+                                <li v-for="subtask in task.subtasks" style="width: 100%">
+                                    <label style="display: flex; justify-content: space-between; width: 100%">
+                                        <p>{{ subtask.name }}</p>
+                                        <input v-model="subtask.done" type="checkbox" @change="checkQuota(todo)" :disabled="task.blocked || blocked">
+                                    </label>
+                                </li>
+                            </ul>
+                            <button v-if="task.subtasks.length && todo.table === 0">Добавить подзадачу</button>
                         </li>
                     </ul>
                 </li>
@@ -35,14 +47,29 @@ Vue.component('todo-table', {
     `,
     methods: {
         checkQuota(todo) {
-            const total = todo.tasks.length;
-            const checked = todo.tasks.filter(t => t.done).length;
+            const total = this.countTotal(todo);
+            const checked = this.countChecked(todo);
             const percentage = (checked / total) * 100
             if (percentage >= this.transitionQuota) this.$emit('task-next', todo)
             else if (percentage < 50 && todo.table === 1) {
                 this.$emit('task-previous', todo)
             }
             else this.$emit('update-todos', this.todos);
+        },
+        countTotal(todo) {
+            let sum = todo.tasks.filter(t => !t.subtasks.length).length;
+            todo.tasks.forEach(task => {
+                if (task.subtasks) sum += task.subtasks.length;
+            })
+            return sum;
+        },
+        countChecked(todo) {
+            let sum = todo.tasks.filter(t => !t.subtasks.length && t.done).length;
+            todo.tasks.forEach(task => {
+                const subtasks = task.subtasks.filter(s => s.done);
+                if (subtasks) sum += subtasks.length;
+            })
+            return sum;
         },
         openModal() {
             modalEventBus.$emit('open-modal');
@@ -88,12 +115,14 @@ Vue.component('todo-list', {
                                     name: 'Погладить чайник',
                                     done: false,
                                     blocked: false,
+                                    subtasks: [],
                                 },
                                 {
                                     id: 1,
                                     name: 'Вскипятить кота',
                                     done: false,
                                     blocked: false,
+                                    subtasks: [],
                                 }
                             ],
                         },
@@ -107,12 +136,33 @@ Vue.component('todo-list', {
                                     name: 'Погладить чайник',
                                     done: false,
                                     blocked: false,
+                                    subtasks: [
+                                        {
+                                            id: 0,
+                                            name: 'Взять чайник',
+                                            done: false,
+                                            blocked: false,
+                                        },
+                                        {
+                                            id: 1,
+                                            name: 'Погладить чайник',
+                                            done: false,
+                                            blocked: false,
+                                        },
+                                        {
+                                            id: 2,
+                                            name: 'Поставить чайник',
+                                            done: false,
+                                            blocked: false,
+                                        },
+                                    ]
                                 },
                                 {
                                     id: 1,
                                     name: 'Вскипятить кота',
                                     done: false,
                                     blocked: false,
+                                    subtasks: []
                                 }
                             ],
                         },
@@ -215,10 +265,26 @@ Vue.component('todo-list', {
             this.saveData();
         },
         saveFirst(todos) {
+            todos = todos.map(t => ({
+                    ...t,
+                    tasks: t.tasks.map(tsk => {
+                        if (tsk.subtasks.length) tsk.done = tsk.subtasks.every(s => s.done);
+                        return tsk
+                    })
+                })
+            )
             this.tableData.firstTable.todos = todos;
             this.saveData();
         },
         saveSecond(todos) {
+            todos = todos.map(t => ({
+                    ...t,
+                    tasks: t.tasks.map(tsk => {
+                        if (tsk.subtasks.length) tsk.done = tsk.subtasks.every(s => s.done);
+                        return tsk
+                    })
+                })
+            )
             this.tableData.secondTable.todos = todos;
             this.saveData();
         },

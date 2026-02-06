@@ -73,20 +73,28 @@
 }
 
 .itemGrid {
-    padding-left: 12px;
-    padding-top: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.8vw;
+    list-style-type: none;
+}
+
+.itemSubGrid {
+    padding-left: 24px;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 0.4vw;
-    list-style-type: none;
 }
 
 .itemGridTask {
+    padding: 12px;
     width: 100%;
-    display: flex;
-    justify-content: space-between;
+    display: grid;
     gap: 8px;
+    background-color: #eee;
+    border-radius: 12px;
 }
 
 .modal {
