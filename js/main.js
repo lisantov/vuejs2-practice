@@ -37,7 +37,7 @@ Vue.component('todo-table', {
                                     </label>
                                 </li>
                             </ul>
-                            <button v-if="todo.table === 0" @click="addSubtask(todo.id, task.id)">Добавить подзадачу</button>
+                            <button v-if="todo.table === 0 && !task.blocked" @click="addSubtask(todo.id, task.id)">Добавить подзадачу</button>
                         </li>
                     </ul>
                 </li>
