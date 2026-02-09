@@ -134,6 +134,16 @@ Vue.component('canban-list', {
                     deadline: new Date('2027-11-11'),
                     updatedAt: new Date(),
                     comment: null
+                },
+                {
+                    id: 1,
+                    table: 0,
+                    name: 'Первая задача',
+                    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi nec sapien consectetur, egestas massa tincidunt, vehicula risus. Integer suscipit ante sit amet luctus rutrum. Cras.',
+                    createdAt: new Date('2025-11-11'),
+                    deadline: new Date('2026-01-01'),
+                    updatedAt: new Date(),
+                    comment: null
                 }
             ]
         }
@@ -200,7 +210,7 @@ Vue.component('canban-modal', {
                         Описание задачи
                         <input type="text" v-model="task.description" required placeholder="Введите описание...">
                     </label>
-                    <label class="modalInput">
+                    <label class="modalInput" v-if="!isRedacting || isActualDate(task.deadline)">
                         Дедлайн задачи
                         <input type="date" v-model="task.deadline" required placeholder="Выберите дедлайн задачи...">
                     </label>
@@ -261,6 +271,9 @@ Vue.component('canban-modal', {
         onCommentSubmit() {
             modalEventBus.$emit('add-comment', this.comment, this.task.id, this.task.step);
             modalEventBus.$emit('close-modal');
+        },
+        isActualDate(date) {
+            return (new Date(date).getTime() - new Date().getTime()) > 0;
         },
     },
     mounted() {
