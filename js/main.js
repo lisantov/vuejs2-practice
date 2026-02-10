@@ -12,7 +12,8 @@ Vue.component('todo-table', {
         canMovePrevious: Boolean,
         canMoveNext: Boolean,
         deadlineFixer: Boolean,
-        tableId: Number
+        tableId: Number,
+        dragoverTask: Object
     },
     template: `
         <div class="table">
@@ -22,7 +23,7 @@ Vue.component('todo-table', {
                 v-else
                 class="tableGrid"
                 :class="{ tableGridDragged: draggedOver }"
-                @dragover.prevent="draggedOver = true"
+                @dragover.prevent="dragover"
                 @dragleave="draggedOver = false"
                 @drop.prevent="handleDrop"
             >
@@ -84,12 +85,35 @@ Vue.component('todo-table', {
             modalEventBus.$emit('handle-comment', task.id, step);
             modalEventBus.$emit('open-modal');
         },
+        dragover() {
+            if (this.dragoverTask && this.dragoverTask.table !== undefined) {
+                switch (this.dragoverTask.table) {
+                    case 0:
+                        if (this.tableId === 1) {
+                            this.draggedOver = true
+                        }
+                        break;
+                    case 1:
+                        if (this.tableId === 2) {
+                            this.draggedOver = true
+                        }
+                        break;
+                    case 2:
+                        if (this.tableId === 3 || this.tableId === 1) {
+                            this.draggedOver = true
+                        }
+                        break;
+                }
+            }
+        },
         dragStart(task) {
             this.$emit('drag-start', task)
         },
         handleDrop() {
-            this.draggedOver = false
-            this.$emit('drag-drop', this.tableId)
+            if (this.draggedOver) {
+                this.draggedOver = false
+                this.$emit('drag-drop', this.tableId)
+            }
         },
         dragEnd() {
             this.$emit('drag-end')
@@ -112,6 +136,7 @@ Vue.component('canban-list', {
                     :canMoveNext="t.next"
                     :deadlineFixer="t.deadline"
                     :tableId="i"
+                    :dragoverTask="draggedTask"
                     @task-delete="handleDelete"
                     @task-move="handleMove"
                     @drag-start="dragStart"
@@ -211,9 +236,14 @@ Vue.component('canban-list', {
             this.draggedTask = task
         },
         dragDrop(tableId) {
-            console.log(tableId)
             this.tasksData = this.tasksData.map(t => {
-                if (t.id === this.draggedTask.id) t.table = tableId
+                if (t.id === this.draggedTask.id) {
+                    if (tableId === 1 && t.table === 2) {
+                        modalEventBus.$emit('handle-comment', t.id, 0);
+                        modalEventBus.$emit('open-modal');
+                    }
+                    t.table = tableId
+                }
                 return t
             })
         },
