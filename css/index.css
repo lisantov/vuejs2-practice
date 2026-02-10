@@ -47,12 +47,22 @@
 }
 
 .tableGrid {
+    padding: 4px;
+    min-height: 35%;
     flex-shrink: 1;
     overflow: auto;
     display: flex;
     flex-direction: column;
     gap: 0.5vw;
     list-style-type: none;
+    border-radius: 4px;
+    border: 2px dashed transparent;
+    transition: 0.15s ease-in-out;
+}
+
+.tableGridDragged {
+    border-color: royalblue;
+    background-color: #4169e11d;
 }
 
 .canbanButton {
