@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { useForm } from 'vee-validate'
-import { watch } from 'vue'
 import { AppButton, FormField } from '@/shared/ui'
 import { useLogin } from '@/entities'
 import { loginSchema } from '../lib/validation'
 import { loginFormVariants } from '../lib/LoginForm.variants'
 import type { LoginFormValues } from '../lib/validation'
+import { AxiosError } from "axios";
 
 const { mutateAsync, state, isLoading } = useLogin()
 const { defineField, handleSubmit, values, errors } = useForm<LoginFormValues>({
@@ -17,10 +17,6 @@ const [password, passwordAttr] = defineField('password')
 
 const onSubmit = handleSubmit((values) => {
   mutateAsync(values)
-})
-
-watch(values, () => {
-  if (state.value.error) state.value.error = new Error(undefined)
 })
 
 const { form, root, formFields, title } = loginFormVariants()
@@ -47,9 +43,21 @@ const { form, root, formFields, title } = loginFormVariants()
           :error="errors.password"
           v-bind="passwordAttr"
           :disabled="isLoading"
+          show-error-message
         />
       </div>
-      <app-button :disabled="isLoading">Войти</app-button>
+      <div class="flex flex-col">
+        <app-button :disabled="isLoading || Object.keys(errors).length">Регистрация</app-button>
+        <p class="text-red-400">
+          {{
+            state.status === 'error' ?
+              state.error instanceof AxiosError && state.error.response
+                ? state.error.response.data.error.message
+                : 'Ошибка при авторизации'
+              : ''
+          }}
+        </p>
+      </div>
     </form>
   </section>
 </template>

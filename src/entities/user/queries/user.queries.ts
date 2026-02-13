@@ -19,3 +19,33 @@ export const useLogin = defineMutation(() => {
     },
   })
 })
+
+export const useRegister = defineMutation(() => {
+  const { setToken } = useAuth()
+  const queryCache = useQueryCache()
+  const router = useRouter()
+
+  return useMutation({
+    mutation: UserService.register,
+    onSuccess(data) {
+      setToken(data.data.user_token)
+      queryCache.invalidateQueries({ key: USER_QUERY_KEYS.all })
+      router.push(Routes.catalog)
+    },
+  })
+})
+
+export const useLogout = defineMutation(() => {
+  const { clearToken } = useAuth()
+  const queryCache = useQueryCache()
+  const router = useRouter()
+
+  return useMutation({
+    mutation: UserService.logout,
+    onSuccess(data) {
+      clearToken()
+      queryCache.invalidateQueries({ key: USER_QUERY_KEYS.all })
+      router.push(Routes.login)
+    },
+  })
+})
