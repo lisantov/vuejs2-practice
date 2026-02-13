@@ -1,0 +1,26 @@
+<script setup lang="ts">
+  import {appHeaderVariants} from "@/widgets/layout/header/ui/AppHeader.variants.ts";
+
+  const { root, title, nav, link, activeLink } = appHeaderVariants();
+</script>
+
+<template>
+  <header :class="root()">
+    <h1 :class="title()">Просто купить</h1>
+    <nav :class="nav()">
+      <RouterLink to="/" v-slot="{ isActive }">
+        <p :class="link() + ' ' + (isActive ? activeLink() : '')">Каталог</p>
+      </RouterLink>
+      <RouterLink to="/auth/register" v-slot="{ isActive }">
+        <p :class="link() + ' ' + (isActive ? activeLink() : '')">Регистрация</p>
+      </RouterLink>
+      <RouterLink to="/auth/login" v-slot="{ isActive }">
+        <p :class="link() + ' ' + (isActive ? activeLink() : '')">Вход</p>
+      </RouterLink>
+    </nav>
+  </header>
+</template>
+
+<style scoped>
+
+</style>
