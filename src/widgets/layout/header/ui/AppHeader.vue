@@ -1,7 +1,11 @@
 <script setup lang="ts">
   import {appHeaderVariants} from "@/widgets/layout/header/ui/AppHeader.variants.ts";
+  import {useAuth} from "@/shared";
+  import {useLogout} from "@/entities";
 
   const { root, title, nav, link, activeLink } = appHeaderVariants();
+  const { isAuth } = useAuth()
+  const { mutate } = useLogout()
 </script>
 
 <template>
@@ -11,12 +15,15 @@
       <RouterLink to="/" v-slot="{ isActive }">
         <p :class="link() + ' ' + (isActive ? activeLink() : '')">Каталог</p>
       </RouterLink>
-      <RouterLink to="/auth/register" v-slot="{ isActive }">
+      <RouterLink to="/auth/register" v-slot="{ isActive }" v-if="!isAuth">
         <p :class="link() + ' ' + (isActive ? activeLink() : '')">Регистрация</p>
       </RouterLink>
-      <RouterLink to="/auth/login" v-slot="{ isActive }">
+      <RouterLink to="/auth/login" v-slot="{ isActive }" v-if="!isAuth">
         <p :class="link() + ' ' + (isActive ? activeLink() : '')">Вход</p>
       </RouterLink>
+      <button v-if="isAuth" :class="link()" @click="mutate()">
+        Выход
+      </button>
     </nav>
   </header>
 </template>
