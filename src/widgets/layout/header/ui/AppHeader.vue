@@ -24,9 +24,9 @@
       <RouterLink to="/user/orders" v-slot="{ isActive }" v-if="isAuth">
         <p :class="link() + ' ' + (isActive ? activeLink() : '')">Заказы</p>
       </RouterLink>
-      <button v-if="isAuth" :class="link()">
-        Корзина
-      </button>
+      <RouterLink to="/user/cart" v-slot="{ isActive }" v-if="isAuth">
+        <p :class="link() + ' ' + (isActive ? activeLink() : '')">Корзина</p>
+      </RouterLink>
       <button v-if="isAuth" :class="link()" @click="mutate()">
         Выход
       </button>
