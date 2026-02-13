@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import {type CartProduct, type Product, useCart} from "@/entities/product";
-  import ProductItem from "@/widgets/layout/product/ui/ProductItem.vue";
+  import {type CartProduct, useCart} from "@/entities/product";
   import {computed} from "vue";
+  import {CartProductItem} from "@/widgets/layout/cartProduct";
 
   interface ReducedProduct {
     product: CartProduct
@@ -30,7 +30,7 @@ import {type CartProduct, type Product, useCart} from "@/entities/product";
 <template>
   <main class="px-12 py-8 grid grid-cols-4 gap-8">
     <template v-for="product in cartProduct">
-      <product-item :product="product.product" :amount="product.amount" />
+      <cart-product-item :product="product.product" :amount="product.amount" />
     </template>
   </main>
 </template>

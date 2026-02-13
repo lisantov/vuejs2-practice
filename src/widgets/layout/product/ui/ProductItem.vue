@@ -5,7 +5,6 @@ import {type Product, useAddProduct} from "@/entities/product";
 
   interface ProductItemProps {
     product: Product;
-    amount: number;
   }
 
   defineProps<ProductItemProps>()
@@ -18,7 +17,7 @@ import {type Product, useAddProduct} from "@/entities/product";
 <template>
   <article :class="root()">
     <div :class="body()">
-      <h2 :class="title()">{{product.name + (amount ? `(${amount})`: '') }}</h2>
+      <h2 :class="title()">{{product.name}}</h2>
       <img :class="image()" :src="CDN_URL + product.image" :alt="product.name">
       <p>{{product.description}}</p>
     </div>
