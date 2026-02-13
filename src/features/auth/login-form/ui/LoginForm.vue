@@ -47,7 +47,7 @@ const { form, root, formFields, title } = loginFormVariants()
         />
       </div>
       <div class="flex flex-col">
-        <app-button :disabled="isLoading || Object.keys(errors).length">Регистрация</app-button>
+        <app-button :disabled="isLoading || Object.keys(errors).length">Войти</app-button>
         <p class="text-red-400">
           {{
             state.status === 'error' ?

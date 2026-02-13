@@ -42,7 +42,7 @@ export const useLogout = defineMutation(() => {
 
   return useMutation({
     mutation: UserService.logout,
-    onSuccess(data) {
+    onSuccess() {
       clearToken()
       queryCache.invalidateQueries({ key: USER_QUERY_KEYS.all })
       router.push(Routes.login)
