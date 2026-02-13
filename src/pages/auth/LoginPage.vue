@@ -1,9 +1,11 @@
 <script setup lang="ts">
-
-import AppHeader from "@/widgets/layout/header/ui/AppHeader.vue";
+import { LoginForm } from "@/features";
 </script>
+
 <template>
-  <AppHeader />
+  <main>
+    <login-form></login-form>
+  </main>
 </template>
 
 <style scoped>

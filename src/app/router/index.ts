@@ -10,21 +10,4 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach((to, from, next) => {
-  const { isAuth } = useAuth()
-
-  const authRoutes = ['catalog']
-  const guestRoutes = ['login', 'register']
-
-  if (authRoutes.includes(to.name as string) && !isAuth.value) {
-    return next(Routes.login)
-  }
-
-  if (guestRoutes.includes(to.name as string) && isAuth.value) {
-    return next(Routes.catalog)
-  }
-
-  next()
-})
-
 export default router

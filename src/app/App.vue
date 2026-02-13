@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import AppHeader from "@/widgets/layout/header/ui/AppHeader.vue";
+import {AppHeader} from "@/widgets";
 </script>
 
 <template>
+  <AppHeader />
   <RouterView />
 </template>
 
