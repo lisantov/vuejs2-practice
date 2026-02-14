@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import {type CartProduct, useCart} from "@/entities/product";
+import {type CartProduct, useCart, useRemoveProduct} from "@/entities/product";
   import {computed} from "vue";
   import {CartProductItem} from "@/widgets/layout/cartProduct";
 
@@ -25,13 +25,22 @@
 
     return Array.from(grouped.values());
   })
+
+  const { mutate } = useRemoveProduct();
+  const deleteProduct = async (product_id: number) => {
+    if (products.value) {
+      const deletables = products.value?.filter(p => p.product_id === product_id);
+      await Promise.all(deletables.map(d => mutate(d.id)))
+    }
+  }
 </script>
 
 <template>
   <main class="px-12 py-8 grid grid-cols-4 gap-8">
-    <template v-for="product in cartProduct">
-      <cart-product-item :product="product.product" :amount="product.amount" />
+    <template v-if="cartProduct.length" v-for="product in cartProduct">
+      <cart-product-item :product="product.product" @remove-product="deleteProduct" :amount="product.amount" />
     </template>
+    <h2 class="text-center text-2xl" v-else>В корзине пусто</h2>
   </main>
 </template>
 

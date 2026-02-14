@@ -1,17 +1,19 @@
 <script setup lang="ts">
-import {type Product, useRemoveProduct} from "@/entities/product";
+import {type CartProduct, type Product, useAddProduct, useRemoveProduct} from "@/entities/product";
 import {AppButton, CDN_URL} from "@/shared";
   import {productItemVariants} from "@/widgets/layout/product/ui/ProductItem.variants.ts";
 
   interface ProductItemProps {
-    product: Product;
+    product: CartProduct;
     amount: number;
   }
 
-  defineProps<ProductItemProps>()
+  const props = defineProps<ProductItemProps>()
 
-  const { mutate, isLoading } = useRemoveProduct();
+  const { mutate: deleteMutate, isLoading: isDeleteLoading } = useRemoveProduct();
+  const { mutate: addMutate, isLoading: isAddLoading } = useAddProduct();
   const { root, title, body, image } = productItemVariants();
+
 </script>
 
 <template>
@@ -23,7 +25,14 @@ import {AppButton, CDN_URL} from "@/shared";
     </div>
     <div class="flex flex-col gap-2">
       <p class="text-center text-blue-400 text-xl font-bold">Всего: {{(product.price * amount).toFixed(1)}} шекелей</p>
-      <app-button class="bg-red-500 hover:bg-red-300" :disabled="isLoading" @click="mutate(product.id)">Убрать из корзины</app-button>
+      <app-button class="bg-red-500 hover:bg-red-300" :disabled="isDeleteLoading" @click="$emit('remove-product', props.product.product_id)">Убрать из корзины</app-button>
+      <div class="grid grid-cols-3">
+        <app-button @click="deleteMutate(product.id)" :disabled="isDeleteLoading">-</app-button>
+        <div class="flex justify-center items-center">
+          <p class="text-xl text-center">{{amount}}</p>
+        </div>
+        <app-button @click="addMutate(product.product_id)" :disabled="isAddLoading">+</app-button>
+      </div>
     </div>
   </article>
 </template>
