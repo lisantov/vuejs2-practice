@@ -46,7 +46,7 @@ import {type CartProduct, useCart, useRemoveProduct} from "@/entities/product";
         <app-button @click="orderMutate">Оформить заказ</app-button>
       </div>
       <div class="px-12 py-8 grid grid-cols-4 gap-8">
-        <template v-for="product in cartProduct">
+        <template v-for="product in cartProduct" :key="product.id">
           <cart-product-item :product="product.product" @remove-product="deleteProduct" :amount="product.amount" />
         </template>
       </div>
